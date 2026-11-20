@@ -4,9 +4,197 @@ author: "Yifeng Huang"
 format:
   html:
     embed-resources: true
-    code-fold: true
     toc: true
 editor: visual
 ---
 
 This is the link to the repo: https://github.com/YifengHuang-Bob/Homework5
+
+
+# Problem 1 - OOP Programming
+
+## (a) Defining the waldCI Class
+
+```{r}
+setClass(
+  "waldCI",
+  slots = c(
+    estimate = "numeric",
+    sterr = "numeric",
+    level = "numeric",
+    lower = "numeric",
+    upper = "numeric"
+  )
+)
+
+```
+
+```{r}
+#' Validate a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return TRUE if valid, otherwise an error message
+setValidity("waldCI", function(object) {
+  lengths <- c(
+    length(object@estimate),
+    length(object@sterr),
+    length(object@level),
+    length(object@lower),
+    length(object@upper)
+  )
+
+  if (any(lengths != 1)) {
+    return("All slots must contain exactly one value.")
+  }
+
+  values <- c(
+    object@estimate,
+    object@sterr,
+    object@level,
+    object@lower,
+    object@upper
+  )
+
+  if (any(!is.finite(values))) {
+    return("All values must be finite.")
+  }
+
+  if (object@sterr < 0) {
+    return("Standard error must be nonnegative.")
+  }
+
+  if (object@level <= 0 || object@level >= 1) {
+    return("Confidence level must be between 0 and 1.")
+  }
+
+  if (object@lower > object@upper) {
+    return("Lower bound cannot exceed upper bound.")
+  }
+
+  z <- qnorm((1 - object@level) / 2, lower.tail = FALSE)
+
+  expected <- object@estimate + c(-1, 1) * z * object@sterr
+
+  if (any(!is.finite(expected))) {
+    return("The implied confidence bounds must be finite.")
+  }
+
+  actual <- c(object@lower, object@upper)
+
+  if (!isTRUE(all.equal(actual, expected, tolerance = 1e-10))) {
+    return("Confidence bounds are inconsistent with the estimate and standard error.")
+  }
+
+  TRUE
+})
+
+```
+
+```{r}
+#' Construct a Wald confidence interval
+#'
+#' @param level Confidence level between 0 and 1
+#' @param mean Point estimate, if supplied
+#' @param sterr Standard error, if supplied
+#' @param lb Lower confidence bound, if supplied
+#' @param ub Upper confidence bound, if supplied
+#' @return A validated waldCI object
+makeWaldCI <- function(level, mean = NULL, sterr = NULL,
+                       lb = NULL, ub = NULL) {
+
+  if (!is.numeric(level) || length(level) != 1 ||
+      !is.finite(level) || level <= 0 || level >= 1) {
+    stop("Confidence level must be a finite number between 0 and 1.")
+  }
+
+  from_stats <- !is.null(mean) && !is.null(sterr) &&
+    is.null(lb) && is.null(ub)
+
+  from_bounds <- !is.null(lb) && !is.null(ub) &&
+    is.null(mean) && is.null(sterr)
+
+  if (!from_stats && !from_bounds) {
+    stop("Supply either mean and sterr, or lb and ub.")
+  }
+
+  z <- qnorm((1 - level) / 2, lower.tail = FALSE)
+
+  if (from_stats) {
+    if (!is.numeric(mean) || length(mean) != 1 ||
+        !is.finite(mean)) {
+      stop("Mean must be a single finite number.")
+    }
+
+    if (!is.numeric(sterr) || length(sterr) != 1 ||
+        !is.finite(sterr) || sterr < 0) {
+      stop("Standard error must be a single nonnegative finite number.")
+    }
+
+    lb <- mean - z * sterr
+    ub <- mean + z * sterr
+  }
+
+  if (from_bounds) {
+    if (!is.numeric(lb) || length(lb) != 1 ||
+        !is.finite(lb) ||
+        !is.numeric(ub) || length(ub) != 1 ||
+        !is.finite(ub)) {
+      stop("Confidence bounds must be finite numbers.")
+    }
+
+    if (lb > ub) {
+      stop("Lower bound cannot exceed upper bound.")
+    }
+
+    mean <- (lb + ub) / 2
+    sterr <- (ub - lb) / (2 * z)
+  }
+
+  object <- new(
+    "waldCI",
+    estimate = as.numeric(mean),
+    sterr = as.numeric(sterr),
+    level = as.numeric(level),
+    lower = as.numeric(lb),
+    upper = as.numeric(ub)
+  )
+
+  validObject(object)
+
+  return(object)
+}
+
+```
+
+```{r}
+test_ci1 <- makeWaldCI(
+  level = 0.95,
+  lb = 17.2,
+  ub = 24.7
+)
+
+test_ci2 <- makeWaldCI(
+  level = 0.99,
+  mean = 13,
+  sterr = 2.5
+)
+
+is(test_ci1, "waldCI")
+is(test_ci2, "waldCI")
+
+validObject(test_ci1)
+validObject(test_ci2)
+
+slotNames(test_ci1)
+
+```
+
+
+
+
+
+
+
+
+
+
