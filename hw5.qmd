@@ -189,6 +189,275 @@ slotNames(test_ci1)
 
 ```
 
+```{r}
+#' Display a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return The object, invisibly
+setMethod("show", "waldCI", function(object) {
+  cat(sprintf(
+    "%.1f%% Wald confidence interval: [%.4f, %.4f]\n",
+    100 * object@level,
+    object@lower,
+    object@upper
+  ))
+
+  cat(sprintf(
+    "Estimate: %.4f\nStandard error: %.4f\n",
+    object@estimate,
+    object@sterr
+  ))
+
+  invisible(object)
+})
+
+```
+
+```{r}
+#' Get the lower confidence bound
+#'
+#' @param object A waldCI object
+#' @return The lower confidence bound
+setGeneric("lb", function(object) {
+  standardGeneric("lb")
+})
+
+#' Get the upper confidence bound
+#'
+#' @param object A waldCI object
+#' @return The upper confidence bound
+setGeneric("ub", function(object) {
+  standardGeneric("ub")
+})
+
+#' Get the standard error
+#'
+#' @param object A waldCI object
+#' @return The standard error
+setGeneric("sterr", function(object) {
+  standardGeneric("sterr")
+})
+
+#' Get the confidence level
+#'
+#' @param object A waldCI object
+#' @return The confidence level
+setGeneric("level", function(object) {
+  standardGeneric("level")
+})
+
+```
+
+```{r}
+#' Extract the lower bound of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return The lower confidence bound
+setMethod("lb", "waldCI", function(object) {
+  return(object@lower)
+})
+
+#' Extract the upper bound of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return The upper confidence bound
+setMethod("ub", "waldCI", function(object) {
+  return(object@upper)
+})
+
+#' Extract the standard error of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return The standard error
+setMethod("sterr", "waldCI", function(object) {
+  return(object@sterr)
+})
+
+#' Extract the confidence level of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @return The confidence level
+setMethod("level", "waldCI", function(object) {
+  return(object@level)
+})
+
+setGeneric("mean")
+
+#' Extract the estimate of a Wald confidence interval
+#'
+#' @param x A waldCI object
+#' @param ... Additional arguments
+#' @return The point estimate
+setMethod("mean", "waldCI", function(x, ...) {
+  return(x@estimate)
+})
+
+```
+
+```{r}
+show(test_ci1)
+show(test_ci2)
+
+lb(test_ci1)
+ub(test_ci1)
+mean(test_ci1)
+sterr(test_ci1)
+level(test_ci1)
+
+lb(test_ci2)
+ub(test_ci2)
+mean(test_ci2)
+sterr(test_ci2)
+level(test_ci2)
+
+mean(c(1, 2, 3))
+
+```
+
+```{r}
+#' Set the lower confidence bound
+#'
+#' @param object A waldCI object
+#' @param value New lower confidence bound
+#' @return The updated waldCI object
+setGeneric("lb<-", function(object, value) {
+  standardGeneric("lb<-")
+})
+
+#' Set the upper confidence bound
+#'
+#' @param object A waldCI object
+#' @param value New upper confidence bound
+#' @return The updated waldCI object
+setGeneric("ub<-", function(object, value) {
+  standardGeneric("ub<-")
+})
+
+#' Set the standard error
+#'
+#' @param object A waldCI object
+#' @param value New standard error
+#' @return The updated waldCI object
+setGeneric("sterr<-", function(object, value) {
+  standardGeneric("sterr<-")
+})
+
+#' Set the confidence level
+#'
+#' @param object A waldCI object
+#' @param value New confidence level
+#' @return The updated waldCI object
+setGeneric("level<-", function(object, value) {
+  standardGeneric("level<-")
+})
+
+#' Set the point estimate
+#'
+#' @param x A waldCI object
+#' @param value New point estimate
+#' @return The updated waldCI object
+setGeneric("mean<-", function(x, value) {
+  standardGeneric("mean<-")
+})
+
+```
+
+```{r}
+#' Update the lower bound of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value New lower confidence bound
+#' @return A validated waldCI object
+setMethod("lb<-", "waldCI", function(object, value) {
+  return(makeWaldCI(
+    level = object@level,
+    lb = value,
+    ub = object@upper
+  ))
+})
+
+#' Update the upper bound of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value New upper confidence bound
+#' @return A validated waldCI object
+setMethod("ub<-", "waldCI", function(object, value) {
+  return(makeWaldCI(
+    level = object@level,
+    lb = object@lower,
+    ub = value
+  ))
+})
+
+#' Update the standard error of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value New standard error
+#' @return A validated waldCI object
+setMethod("sterr<-", "waldCI", function(object, value) {
+  return(makeWaldCI(
+    level = object@level,
+    mean = object@estimate,
+    sterr = value
+  ))
+})
+
+#' Update the confidence level of a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value New confidence level
+#' @return A validated waldCI object
+setMethod("level<-", "waldCI", function(object, value) {
+  return(makeWaldCI(
+    level = value,
+    mean = object@estimate,
+    sterr = object@sterr
+  ))
+})
+
+#' Update the estimate of a Wald confidence interval
+#'
+#' @param x A waldCI object
+#' @param value New point estimate
+#' @return A validated waldCI object
+setMethod("mean<-", "waldCI", function(x, value) {
+  return(makeWaldCI(
+    level = x@level,
+    mean = value,
+    sterr = x@sterr
+  ))
+})
+
+```
+
+```{r}
+setter_test <- test_ci1
+
+lb(setter_test) <- 18
+validObject(setter_test)
+
+ub(setter_test) <- 25
+validObject(setter_test)
+
+mean(setter_test) <- 22
+validObject(setter_test)
+
+sterr(setter_test) <- 1.5
+validObject(setter_test)
+
+level(setter_test) <- 0.90
+validObject(setter_test)
+
+setter_test
+
+```
+
+
+
+
+
+
+
 
 
 
