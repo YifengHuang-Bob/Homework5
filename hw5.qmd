@@ -452,15 +452,147 @@ setter_test
 
 ```
 
+```{r}
+#' Check whether a value is within a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value A numeric value
+#' @return A logical indicating whether the value is within the interval
+setGeneric("contains", function(object, value) {
+  standardGeneric("contains")
+})
 
+#' Check whether two Wald confidence intervals overlap
+#'
+#' @param x A waldCI object
+#' @param y Another waldCI object
+#' @return A logical indicating whether the intervals overlap
+setGeneric("overlap", function(x, y) {
+  standardGeneric("overlap")
+})
 
+#' Transform a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param fun A monotonic transformation function
+#' @return A transformed waldCI object
+setGeneric("transformCI", function(object, fun) {
+  standardGeneric("transformCI")
+})
 
+```
 
+```{r}
+#' Determine whether a value is inside a Wald confidence interval
+#'
+#' @param object A waldCI object
+#' @param value A numeric value
+#' @return TRUE if the value is within the interval, otherwise FALSE
+setMethod("contains", "waldCI", function(object, value) {
+  if (!is.numeric(value) || length(value) != 1 ||
+      !is.finite(value)) {
+    stop("Value must be a single finite number.")
+  }
 
+  return(value >= object@lower && value <= object@upper)
+})
 
+#' Determine whether two Wald confidence intervals overlap
+#'
+#' @param x A waldCI object
+#' @param y Another waldCI object
+#' @return TRUE if the intervals overlap, otherwise FALSE
+setMethod(
+  "overlap",
+  signature(x = "waldCI", y = "waldCI"),
+  function(x, y) {
+    return(x@lower <= y@upper && y@lower <= x@upper)
+  }
+)
 
+```
 
+```{r}
+#' Convert a Wald confidence interval to a numeric vector
+#'
+#' @param x A waldCI object
+#' @param ... Additional arguments
+#' @return A numeric vector containing the lower and upper bounds
+setMethod("as.numeric", "waldCI", function(x, ...) {
+  return(c(x@lower, x@upper))
+})
 
+```
+
+```{r}
+#' Transform a Wald confidence interval using a monotonic function
+#'
+#' @param object A waldCI object
+#' @param fun A function monotonic over the confidence interval
+#' @return A validated transformed waldCI object
+setMethod("transformCI", "waldCI", function(object, fun) {
+  if (!is.function(fun)) {
+    stop("The transformation must be a function.")
+  }
+
+  warning(
+    "Only monotonic functions make sense for transforming confidence intervals.",
+    call. = FALSE
+  )
+
+  transformed <- c(
+    fun(object@lower),
+    fun(object@upper)
+  )
+
+  if (!is.numeric(transformed) || length(transformed) != 2 ||
+      any(!is.finite(transformed))) {
+    stop("The transformed bounds must be finite numeric values.")
+  }
+
+  bounds <- sort(transformed)
+
+  return(makeWaldCI(
+    level = object@level,
+    lb = bounds[1],
+    ub = bounds[2]
+  ))
+})
+
+```
+
+```{r}
+contains(test_ci1, 17)
+contains(test_ci1, 17.2)
+contains(test_ci1, 20)
+contains(test_ci1, 24.7)
+contains(test_ci1, 25)
+
+overlap(test_ci1, test_ci2)
+
+test_ci3 <- makeWaldCI(
+  level = 0.95,
+  lb = 30,
+  ub = 40
+)
+
+overlap(test_ci1, test_ci3)
+
+as.numeric(test_ci1)
+as.numeric(test_ci2)
+
+transformed_sqrt <- transformCI(test_ci1, sqrt)
+transformed_sqrt
+validObject(transformed_sqrt)
+
+transformed_log <- transformCI(test_ci2, log)
+transformed_log
+validObject(transformed_log)
+
+transformed_negative <- transformCI(test_ci1, function(x) -x)
+transformed_negative
+validObject(transformed_negative)
+```
 
 
 
