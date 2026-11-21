@@ -647,12 +647,77 @@ eci1
 mean(transformCI(ci2, log))
 ```
 
+\
 
+## (c) Testing the Validator
 
+```{r}
+invalid_sterr <- ci1
+invalid_sterr@sterr <- -1
+validObject(invalid_sterr, test = TRUE)
 
+invalid_bounds <- ci1
+invalid_bounds@lower <- 30
+validObject(invalid_bounds, test = TRUE)
 
+invalid_infinite <- ci1
+invalid_infinite@upper <- Inf
+validObject(invalid_infinite, test = TRUE)
 
+```
 
+```{r}
+tryCatch(
+  makeWaldCI(level = 0.95, mean = 10, sterr = -1),
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  makeWaldCI(level = 0.95, lb = 30, ub = 20),
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  makeWaldCI(level = 0.95, lb = 10, ub = Inf),
+  error = function(e) conditionMessage(e)
+)
+
+```
+
+```{r}
+setter_test <- ci1
+
+tryCatch(
+  { lb(setter_test) <- 30 },
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  { ub(setter_test) <- 10 },
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  { mean(setter_test) <- Inf },
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  { sterr(setter_test) <- -1 },
+  error = function(e) conditionMessage(e)
+)
+
+tryCatch(
+  { level(setter_test) <- 1.2 },
+  error = function(e) conditionMessage(e)
+)
+
+validObject(setter_test)
+as.numeric(setter_test)
+
+```
+
+The results confirm that the validator correctly identifies negative standard errors, lower bounds exceeding upper bounds, and infinite confidence bounds. The constructor also rejects these invalid inputs, and all five setters prevent invalid modifications. After the unsuccessful setter operations, the original confidence interval remains valid, with its bounds unchanged at $[17.2, 24.7]$.
 
 
 
