@@ -594,6 +594,76 @@ transformed_negative
 validObject(transformed_negative)
 ```
 
+\
+
+## (b) Creating and Evaluating Wald Confidence Intervals
+
+```{r}
+ci1 <- makeWaldCI(
+  level = 0.95,
+  lb = 17.2,
+  ub = 24.7
+)
+
+ci2 <- makeWaldCI(
+  level = 0.99,
+  mean = 13,
+  sterr = 2.5
+)
+
+ci3 <- makeWaldCI(
+  level = 0.75,
+  lb = 27.43,
+  ub = 39.22
+)
+```
+
+```{r}
+ci1
+ci2
+ci3
+
+as.numeric(ci1)
+as.numeric(ci2)
+as.numeric(ci3)
+
+lb(ci2)
+ub(ci2)
+mean(ci1)
+sterr(ci3)
+level(ci2)
+
+lb(ci2) <- 10.5
+mean(ci3) <- 34
+level(ci3) <- 0.8
+
+contains(ci1, 17)
+contains(ci3, 44)
+overlap(ci1, ci2)
+
+eci1 <- transformCI(ci1, sqrt)
+eci1
+
+mean(transformCI(ci2, log))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
