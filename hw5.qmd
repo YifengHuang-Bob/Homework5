@@ -720,6 +720,166 @@ as.numeric(setter_test)
 The results confirm that the validator correctly identifies negative standard errors, lower bounds exceeding upper bounds, and infinite confidence bounds. The constructor also rejects these invalid inputs, and all five setters prevent invalid modifications. After the unsuccessful setter operations, the original confidence interval remains valid, with its bounds unchanged at $[17.2, 24.7]$.
 
 
+<div style="height: 2cm;"></div>
+
+
+# Problem 2 - data.table
+
+## (a) Number of Tournaments in 2019
+
+```{r}
+library(data.table)
+
+tennis <- fread("data/atp_matches_2019.csv")
+
+dim(tennis)
+names(tennis)
+
+```
+
+```{r}
+tennis[, .(n_tournaments = uniqueN(tourney_id))]
+
+```
+There were **128 tournaments** in 2019, counting each unique `tourney_id` as a separate tournament.
+
+\
+
+## (b) Players with Multiple Tournament Titles
+
+```{r}
+champions <- tennis[
+  round == "F",
+  .(tourney_id, winner_id, winner_name)
+]
+
+title_counts <- champions[
+  ,
+  .(n_titles = uniqueN(tourney_id)),
+  by = .(winner_id, winner_name)
+]
+
+multi_winners <- title_counts[
+  n_titles > 1
+][
+  order(-n_titles, winner_name)
+]
+
+multi_winners
+
+```
+
+```{r}
+multi_winners[
+  ,
+  .(
+    n_players = .N,
+    max_titles = max(n_titles)
+  )
+]
+
+multi_winners[
+  n_titles == max(n_titles)
+]
+
+```
+In 2019, 12 players won more than one tournament. Dominic Thiem and Novak Djokovic tied for the most tournament titles, each winning 5 tournaments.
+
+\
+
+## (c) Comparing Aces Between Winners and Losers
+
+```{r}
+ace_data <- tennis[
+  !is.na(w_ace) & !is.na(l_ace),
+  .(w_ace, l_ace)
+]
+
+ace_data[, ace_diff := w_ace - l_ace]
+
+dim(ace_data)
+
+```
+
+```{r}
+ace_summary <- ace_data[
+  ,
+  .(
+    n_matches = .N,
+    mean_winner_aces = mean(w_ace),
+    mean_loser_aces = mean(l_ace),
+    mean_diff = mean(ace_diff),
+    se_diff = sd(ace_diff) / sqrt(.N)
+  )
+]
+
+ace_summary[
+  ,
+  `:=`(
+    ci_lower = mean_diff - 1.96 * se_diff,
+    ci_upper = mean_diff + 1.96 * se_diff
+  )
+]
+
+ace_summary
+
+```
+
+After excluding matches with missing ace statistics, 2,694 matches remained for analysis. Winners averaged 7.50 aces per match, compared with 5.79 for losers.
+
+Using the paired differences between winners' and losers' ace counts, the mean difference was 1.70 aces, with an approximate 95% confidence interval of $[1.43, 1.97]$.
+
+Since the entire confidence interval is above zero, there is evidence that winners have more aces than losers on average.
+
+\
+
+## (d) Players with the Highest Win Rate
+
+```{r}
+player_results <- rbindlist(list(
+  tennis[, .(
+    player_id = winner_id,
+    player_name = winner_name,
+    won = 1L
+  )],
+  tennis[, .(
+    player_id = loser_id,
+    player_name = loser_name,
+    won = 0L
+  )]
+))
+
+win_rates <- player_results[
+  !is.na(player_id),
+  .(
+    n_matches = .N,
+    n_wins = sum(won),
+    win_rate = mean(won)
+  ),
+  by = .(player_id, player_name)
+][
+  n_matches >= 5
+][
+  order(-win_rate, -n_matches, player_name)
+]
+
+head(win_rates, 10)
+
+```
+
+```{r}
+top_players <- win_rates[
+  win_rate == max(win_rate)
+]
+
+top_players
+
+```
+Among players who participated in at least 5 matches in 2019, **Rafael Nadal had the highest win rate of approximately 86.96%**, winning 60 out of 69 matches. No other player achieved the same win rate.
+
+
+
+
 
 
 

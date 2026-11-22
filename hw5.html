@@ -2356,6 +2356,13 @@ window.Quarto = {
   <li><a href="#b-creating-and-evaluating-wald-confidence-intervals" id="toc-b-creating-and-evaluating-wald-confidence-intervals" class="nav-link" data-scroll-target="#b-creating-and-evaluating-wald-confidence-intervals">(b) Creating and Evaluating Wald Confidence Intervals</a></li>
   <li><a href="#c-testing-the-validator" id="toc-c-testing-the-validator" class="nav-link" data-scroll-target="#c-testing-the-validator">(c) Testing the Validator</a></li>
   </ul></li>
+  <li><a href="#problem-2---data.table" id="toc-problem-2---data.table" class="nav-link" data-scroll-target="#problem-2---data.table">Problem 2 - data.table</a>
+  <ul class="collapse">
+  <li><a href="#a-number-of-tournaments-in-2019" id="toc-a-number-of-tournaments-in-2019" class="nav-link" data-scroll-target="#a-number-of-tournaments-in-2019">(a) Number of Tournaments in 2019</a></li>
+  <li><a href="#b-players-with-multiple-tournament-titles" id="toc-b-players-with-multiple-tournament-titles" class="nav-link" data-scroll-target="#b-players-with-multiple-tournament-titles">(b) Players with Multiple Tournament Titles</a></li>
+  <li><a href="#c-comparing-aces-between-winners-and-losers" id="toc-c-comparing-aces-between-winners-and-losers" class="nav-link" data-scroll-target="#c-comparing-aces-between-winners-and-losers">(c) Comparing Aces Between Winners and Losers</a></li>
+  <li><a href="#d-players-with-the-highest-win-rate" id="toc-d-players-with-the-highest-win-rate" class="nav-link" data-scroll-target="#d-players-with-the-highest-win-rate">(d) Players with the Highest Win Rate</a></li>
+  </ul></li>
   </ul>
 </nav>
 </div>
@@ -3308,6 +3315,243 @@ intervals.</code></pre>
 </div>
 </div>
 <p>The results confirm that the validator correctly identifies negative standard errors, lower bounds exceeding upper bounds, and infinite confidence bounds. The constructor also rejects these invalid inputs, and all five setters prevent invalid modifications. After the unsuccessful setter operations, the original confidence interval remains valid, with its bounds unchanged at <span class="math inline">\([17.2, 24.7]\)</span>.</p>
+<div style="height: 2cm;">
+
+</div>
+</section>
+</section>
+<section id="problem-2---data.table" class="level1">
+<h1>Problem 2 - data.table</h1>
+<section id="a-number-of-tournaments-in-2019" class="level2">
+<h2 class="anchored" data-anchor-id="a-number-of-tournaments-in-2019">(a) Number of Tournaments in 2019</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb183"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb183-1"><a href="#cb183-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(data.table)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package &#39;data.table&#39; was built under R version 4.6.2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: &#39;data.table&#39;</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from &#39;package:base&#39;:
+
+    %notin%</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb187"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb187-1"><a href="#cb187-1" aria-hidden="true" tabindex="-1"></a>tennis <span class="ot">&lt;-</span> <span class="fu">fread</span>(<span class="st">&quot;data/atp_matches_2019.csv&quot;</span>)</span>
+<span id="cb187-2"><a href="#cb187-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb187-3"><a href="#cb187-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(tennis)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2806   49</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb189"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tennis)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] &quot;tourney_id&quot;         &quot;tourney_name&quot;       &quot;surface&quot;           
+ [4] &quot;draw_size&quot;          &quot;tourney_level&quot;      &quot;tourney_date&quot;      
+ [7] &quot;match_num&quot;          &quot;winner_id&quot;          &quot;winner_seed&quot;       
+[10] &quot;winner_entry&quot;       &quot;winner_name&quot;        &quot;winner_hand&quot;       
+[13] &quot;winner_ht&quot;          &quot;winner_ioc&quot;         &quot;winner_age&quot;        
+[16] &quot;loser_id&quot;           &quot;loser_seed&quot;         &quot;loser_entry&quot;       
+[19] &quot;loser_name&quot;         &quot;loser_hand&quot;         &quot;loser_ht&quot;          
+[22] &quot;loser_ioc&quot;          &quot;loser_age&quot;          &quot;score&quot;             
+[25] &quot;best_of&quot;            &quot;round&quot;              &quot;minutes&quot;           
+[28] &quot;w_ace&quot;              &quot;w_df&quot;               &quot;w_svpt&quot;            
+[31] &quot;w_1stIn&quot;            &quot;w_1stWon&quot;           &quot;w_2ndWon&quot;          
+[34] &quot;w_SvGms&quot;            &quot;w_bpSaved&quot;          &quot;w_bpFaced&quot;         
+[37] &quot;l_ace&quot;              &quot;l_df&quot;               &quot;l_svpt&quot;            
+[40] &quot;l_1stIn&quot;            &quot;l_1stWon&quot;           &quot;l_2ndWon&quot;          
+[43] &quot;l_SvGms&quot;            &quot;l_bpSaved&quot;          &quot;l_bpFaced&quot;         
+[46] &quot;winner_rank&quot;        &quot;winner_rank_points&quot; &quot;loser_rank&quot;        
+[49] &quot;loser_rank_points&quot; </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb191"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb191-1"><a href="#cb191-1" aria-hidden="true" tabindex="-1"></a>tennis[, .(<span class="at">n_tournaments =</span> <span class="fu">uniqueN</span>(tourney_id))]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   n_tournaments
+           &lt;int&gt;
+1:           128</code></pre>
+</div>
+</div>
+<p>There were <strong>128 tournaments</strong> in 2019, counting each unique <code>tourney_id</code> as a separate tournament.</p>
+<p><br>
+</p>
+</section>
+<section id="b-players-with-multiple-tournament-titles" class="level2">
+<h2 class="anchored" data-anchor-id="b-players-with-multiple-tournament-titles">(b) Players with Multiple Tournament Titles</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb193"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb193-1"><a href="#cb193-1" aria-hidden="true" tabindex="-1"></a>champions <span class="ot">&lt;-</span> tennis[</span>
+<span id="cb193-2"><a href="#cb193-2" aria-hidden="true" tabindex="-1"></a>  round <span class="sc">==</span> <span class="st">&quot;F&quot;</span>,</span>
+<span id="cb193-3"><a href="#cb193-3" aria-hidden="true" tabindex="-1"></a>  .(tourney_id, winner_id, winner_name)</span>
+<span id="cb193-4"><a href="#cb193-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb193-5"><a href="#cb193-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb193-6"><a href="#cb193-6" aria-hidden="true" tabindex="-1"></a>title_counts <span class="ot">&lt;-</span> champions[</span>
+<span id="cb193-7"><a href="#cb193-7" aria-hidden="true" tabindex="-1"></a>  ,</span>
+<span id="cb193-8"><a href="#cb193-8" aria-hidden="true" tabindex="-1"></a>  .(<span class="at">n_titles =</span> <span class="fu">uniqueN</span>(tourney_id)),</span>
+<span id="cb193-9"><a href="#cb193-9" aria-hidden="true" tabindex="-1"></a>  by <span class="ot">=</span> .(winner_id, winner_name)</span>
+<span id="cb193-10"><a href="#cb193-10" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb193-11"><a href="#cb193-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb193-12"><a href="#cb193-12" aria-hidden="true" tabindex="-1"></a>multi_winners <span class="ot">&lt;-</span> title_counts[</span>
+<span id="cb193-13"><a href="#cb193-13" aria-hidden="true" tabindex="-1"></a>  n_titles <span class="sc">&gt;</span> <span class="dv">1</span></span>
+<span id="cb193-14"><a href="#cb193-14" aria-hidden="true" tabindex="-1"></a>][</span>
+<span id="cb193-15"><a href="#cb193-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">order</span>(<span class="sc">-</span>n_titles, winner_name)</span>
+<span id="cb193-16"><a href="#cb193-16" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb193-17"><a href="#cb193-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb193-18"><a href="#cb193-18" aria-hidden="true" tabindex="-1"></a>multi_winners</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    winner_id        winner_name n_titles
+        &lt;int&gt;             &lt;char&gt;    &lt;int&gt;
+ 1:    106233      Dominic Thiem        5
+ 2:    104925     Novak Djokovic        5
+ 3:    106421    Daniil Medvedev        4
+ 4:    104745       Rafael Nadal        4
+ 5:    103819      Roger Federer        4
+ 6:    200282     Alex De Minaur        3
+ 7:    126774 Stefanos Tsitsipas        3
+ 8:    105332       Benoit Paire        2
+ 9:    106426     Cristian Garin        2
+10:    104542 Jo-Wilfried Tsonga        2
+11:    126610  Matteo Berrettini        2
+12:    106401       Nick Kyrgios        2</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb195"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb195-1"><a href="#cb195-1" aria-hidden="true" tabindex="-1"></a>multi_winners[</span>
+<span id="cb195-2"><a href="#cb195-2" aria-hidden="true" tabindex="-1"></a>  ,</span>
+<span id="cb195-3"><a href="#cb195-3" aria-hidden="true" tabindex="-1"></a>  .(</span>
+<span id="cb195-4"><a href="#cb195-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_players =</span> .N,</span>
+<span id="cb195-5"><a href="#cb195-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_titles =</span> <span class="fu">max</span>(n_titles)</span>
+<span id="cb195-6"><a href="#cb195-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb195-7"><a href="#cb195-7" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   n_players max_titles
+       &lt;int&gt;      &lt;int&gt;
+1:        12          5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb197"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb197-1"><a href="#cb197-1" aria-hidden="true" tabindex="-1"></a>multi_winners[</span>
+<span id="cb197-2"><a href="#cb197-2" aria-hidden="true" tabindex="-1"></a>  n_titles <span class="sc">==</span> <span class="fu">max</span>(n_titles)</span>
+<span id="cb197-3"><a href="#cb197-3" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   winner_id    winner_name n_titles
+       &lt;int&gt;         &lt;char&gt;    &lt;int&gt;
+1:    106233  Dominic Thiem        5
+2:    104925 Novak Djokovic        5</code></pre>
+</div>
+</div>
+<p>In 2019, 12 players won more than one tournament. Dominic Thiem and Novak Djokovic tied for the most tournament titles, each winning 5 tournaments.</p>
+<p><br>
+</p>
+</section>
+<section id="c-comparing-aces-between-winners-and-losers" class="level2">
+<h2 class="anchored" data-anchor-id="c-comparing-aces-between-winners-and-losers">(c) Comparing Aces Between Winners and Losers</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb199"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb199-1"><a href="#cb199-1" aria-hidden="true" tabindex="-1"></a>ace_data <span class="ot">&lt;-</span> tennis[</span>
+<span id="cb199-2"><a href="#cb199-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">!</span><span class="fu">is.na</span>(w_ace) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(l_ace),</span>
+<span id="cb199-3"><a href="#cb199-3" aria-hidden="true" tabindex="-1"></a>  .(w_ace, l_ace)</span>
+<span id="cb199-4"><a href="#cb199-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb199-5"><a href="#cb199-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb199-6"><a href="#cb199-6" aria-hidden="true" tabindex="-1"></a>ace_data[, ace_diff <span class="sc">:</span><span class="er">=</span> w_ace <span class="sc">-</span> l_ace]</span>
+<span id="cb199-7"><a href="#cb199-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb199-8"><a href="#cb199-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ace_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2694    3</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb201"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb201-1"><a href="#cb201-1" aria-hidden="true" tabindex="-1"></a>ace_summary <span class="ot">&lt;-</span> ace_data[</span>
+<span id="cb201-2"><a href="#cb201-2" aria-hidden="true" tabindex="-1"></a>  ,</span>
+<span id="cb201-3"><a href="#cb201-3" aria-hidden="true" tabindex="-1"></a>  .(</span>
+<span id="cb201-4"><a href="#cb201-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_matches =</span> .N,</span>
+<span id="cb201-5"><a href="#cb201-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_winner_aces =</span> <span class="fu">mean</span>(w_ace),</span>
+<span id="cb201-6"><a href="#cb201-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_loser_aces =</span> <span class="fu">mean</span>(l_ace),</span>
+<span id="cb201-7"><a href="#cb201-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_diff =</span> <span class="fu">mean</span>(ace_diff),</span>
+<span id="cb201-8"><a href="#cb201-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">se_diff =</span> <span class="fu">sd</span>(ace_diff) <span class="sc">/</span> <span class="fu">sqrt</span>(.N)</span>
+<span id="cb201-9"><a href="#cb201-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb201-10"><a href="#cb201-10" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb201-11"><a href="#cb201-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb201-12"><a href="#cb201-12" aria-hidden="true" tabindex="-1"></a>ace_summary[</span>
+<span id="cb201-13"><a href="#cb201-13" aria-hidden="true" tabindex="-1"></a>  ,</span>
+<span id="cb201-14"><a href="#cb201-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">:=</span><span class="st">`</span>(</span>
+<span id="cb201-15"><a href="#cb201-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">ci_lower =</span> mean_diff <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se_diff,</span>
+<span id="cb201-16"><a href="#cb201-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">ci_upper =</span> mean_diff <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se_diff</span>
+<span id="cb201-17"><a href="#cb201-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb201-18"><a href="#cb201-18" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb201-19"><a href="#cb201-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb201-20"><a href="#cb201-20" aria-hidden="true" tabindex="-1"></a>ace_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   n_matches mean_winner_aces mean_loser_aces mean_diff   se_diff ci_lower
+       &lt;int&gt;            &lt;num&gt;           &lt;num&gt;     &lt;num&gt;     &lt;num&gt;    &lt;num&gt;
+1:      2694         7.497402        5.792502    1.7049 0.1377917 1.434828
+   ci_upper
+      &lt;num&gt;
+1: 1.974972</code></pre>
+</div>
+</div>
+<p>After excluding matches with missing ace statistics, 2,694 matches remained for analysis. Winners averaged 7.50 aces per match, compared with 5.79 for losers.</p>
+<p>Using the paired differences between winners’ and losers’ ace counts, the mean difference was 1.70 aces, with an approximate 95% confidence interval of <span class="math inline">\([1.43, 1.97]\)</span>.</p>
+<p>Since the entire confidence interval is above zero, there is evidence that winners have more aces than losers on average.</p>
+<p><br>
+</p>
+</section>
+<section id="d-players-with-the-highest-win-rate" class="level2">
+<h2 class="anchored" data-anchor-id="d-players-with-the-highest-win-rate">(d) Players with the Highest Win Rate</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb203"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb203-1"><a href="#cb203-1" aria-hidden="true" tabindex="-1"></a>player_results <span class="ot">&lt;-</span> <span class="fu">rbindlist</span>(<span class="fu">list</span>(</span>
+<span id="cb203-2"><a href="#cb203-2" aria-hidden="true" tabindex="-1"></a>  tennis[, .(</span>
+<span id="cb203-3"><a href="#cb203-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_id =</span> winner_id,</span>
+<span id="cb203-4"><a href="#cb203-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_name =</span> winner_name,</span>
+<span id="cb203-5"><a href="#cb203-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">won =</span> <span class="dv">1</span>L</span>
+<span id="cb203-6"><a href="#cb203-6" aria-hidden="true" tabindex="-1"></a>  )],</span>
+<span id="cb203-7"><a href="#cb203-7" aria-hidden="true" tabindex="-1"></a>  tennis[, .(</span>
+<span id="cb203-8"><a href="#cb203-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_id =</span> loser_id,</span>
+<span id="cb203-9"><a href="#cb203-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">player_name =</span> loser_name,</span>
+<span id="cb203-10"><a href="#cb203-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">won =</span> <span class="dv">0</span>L</span>
+<span id="cb203-11"><a href="#cb203-11" aria-hidden="true" tabindex="-1"></a>  )]</span>
+<span id="cb203-12"><a href="#cb203-12" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb203-13"><a href="#cb203-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb203-14"><a href="#cb203-14" aria-hidden="true" tabindex="-1"></a>win_rates <span class="ot">&lt;-</span> player_results[</span>
+<span id="cb203-15"><a href="#cb203-15" aria-hidden="true" tabindex="-1"></a>  <span class="sc">!</span><span class="fu">is.na</span>(player_id),</span>
+<span id="cb203-16"><a href="#cb203-16" aria-hidden="true" tabindex="-1"></a>  .(</span>
+<span id="cb203-17"><a href="#cb203-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_matches =</span> .N,</span>
+<span id="cb203-18"><a href="#cb203-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_wins =</span> <span class="fu">sum</span>(won),</span>
+<span id="cb203-19"><a href="#cb203-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">win_rate =</span> <span class="fu">mean</span>(won)</span>
+<span id="cb203-20"><a href="#cb203-20" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb203-21"><a href="#cb203-21" aria-hidden="true" tabindex="-1"></a>  by <span class="ot">=</span> .(player_id, player_name)</span>
+<span id="cb203-22"><a href="#cb203-22" aria-hidden="true" tabindex="-1"></a>][</span>
+<span id="cb203-23"><a href="#cb203-23" aria-hidden="true" tabindex="-1"></a>  n_matches <span class="sc">&gt;=</span> <span class="dv">5</span></span>
+<span id="cb203-24"><a href="#cb203-24" aria-hidden="true" tabindex="-1"></a>][</span>
+<span id="cb203-25"><a href="#cb203-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">order</span>(<span class="sc">-</span>win_rate, <span class="sc">-</span>n_matches, player_name)</span>
+<span id="cb203-26"><a href="#cb203-26" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb203-27"><a href="#cb203-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb203-28"><a href="#cb203-28" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(win_rates, <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    player_id        player_name n_matches n_wins  win_rate
+        &lt;int&gt;             &lt;char&gt;     &lt;int&gt;  &lt;int&gt;     &lt;num&gt;
+ 1:    104745       Rafael Nadal        69     60 0.8695652
+ 2:    104925     Novak Djokovic        69     58 0.8405797
+ 3:    103819      Roger Federer        66     55 0.8333333
+ 4:    106421    Daniil Medvedev        80     59 0.7375000
+ 5:    104731     Kevin Anderson        15     11 0.7333333
+ 6:    106233      Dominic Thiem        69     50 0.7246377
+ 7:    105226      Attila Balazs        10      7 0.7000000
+ 8:    126774 Stefanos Tsitsipas        80     55 0.6875000
+ 9:    200282     Alex De Minaur        62     42 0.6774194
+10:    105453      Kei Nishikori        43     29 0.6744186</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb205"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb205-1"><a href="#cb205-1" aria-hidden="true" tabindex="-1"></a>top_players <span class="ot">&lt;-</span> win_rates[</span>
+<span id="cb205-2"><a href="#cb205-2" aria-hidden="true" tabindex="-1"></a>  win_rate <span class="sc">==</span> <span class="fu">max</span>(win_rate)</span>
+<span id="cb205-3"><a href="#cb205-3" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb205-4"><a href="#cb205-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb205-5"><a href="#cb205-5" aria-hidden="true" tabindex="-1"></a>top_players</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   player_id  player_name n_matches n_wins  win_rate
+       &lt;int&gt;       &lt;char&gt;     &lt;int&gt;  &lt;int&gt;     &lt;num&gt;
+1:    104745 Rafael Nadal        69     60 0.8695652</code></pre>
+</div>
+</div>
+<p>Among players who participated in at least 5 matches in 2019, <strong>Rafael Nadal had the highest win rate of approximately 86.96%</strong>, winning 60 out of 69 matches. No other player achieved the same win rate.</p>
 </section>
 </section>
 
