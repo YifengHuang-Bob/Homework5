@@ -878,6 +878,484 @@ top_players
 Among players who participated in at least 5 matches in 2019, **Rafael Nadal had the highest win rate of approximately 86.96%**, winning 60 out of 69 matches. No other player achieved the same win rate.
 
 
+<div style="height: 2cm;"></div>
+
+
+# Problem 3 - plotly
+
+## (a) Major and Minor Spikes in COVID-19 Cases
+
+```{r}
+library(plotly)
+library(data.table)
+
+covid <- fread("data/us-states.csv")
+
+covid[, date := as.Date(date)]
+
+dim(covid)
+range(covid$date)
+uniqueN(covid$state)
+
+```
+
+```{r}
+us_cases <- covid[
+  ,
+  .(cases_7day = sum(cases_avg)),
+  by = date
+][order(date)]
+
+us_cases[, wave := fcase(
+  date < as.Date("2020-05-16"), "Spring 2020",
+  date < as.Date("2020-09-16"), "Summer 2020",
+  date < as.Date("2021-03-15"), "Winter 2020-21",
+  date < as.Date("2021-07-01"), "Spring 2021",
+  date < as.Date("2021-11-16"), "Summer-Fall 2021",
+  date < as.Date("2022-03-16"), "Winter 2021-22",
+  date < as.Date("2022-10-16"), "Summer 2022",
+  default = "Winter 2022-23"
+)]
+
+peak_summary <- us_cases[
+  ,
+  .SD[which.max(cases_7day)],
+  by = wave
+][order(date)]
+
+peak_summary[
+  ,
+  spike_type := fifelse(cases_7day >= 150000, "Major", "Minor")
+]
+
+peak_summary[
+  ,
+  peak_label := paste(
+    month.abb[as.integer(format(date, "%m"))],
+    format(date, "%Y")
+  )
+]
+
+peak_summary[
+  ,
+  .(
+    wave,
+    date,
+    cases_7day,
+    spike_type
+  )
+]
+
+```
+
+```{r}
+p <- plot_ly() |>
+  add_lines(
+    data = us_cases,
+    x = ~date,
+    y = ~cases_7day,
+    name = "7-day Average",
+    line = list(
+      color = "#2878A8",
+      width = 2
+    ),
+    hovertemplate = paste0(
+      "Date: %{x|%b %d, %Y}<br>",
+      "Cases/day: %{y:,.0f}",
+      "<extra></extra>"
+    )
+  ) |>
+  add_trace(
+    data = peak_summary[spike_type == "Major"],
+    x = ~date,
+    y = ~cases_7day,
+    type = "scatter",
+    mode = "markers+text",
+    name = "Major Spike",
+    text = ~peak_label,
+    textposition = "top center",
+    marker = list(
+      color = "#C43D3D",
+      size = 11,
+      symbol = "triangle-up"
+    ),
+    hovertemplate = paste0(
+      "Major Spike<br>",
+      "Date: %{x|%b %d, %Y}<br>",
+      "Cases/day: %{y:,.0f}",
+      "<extra></extra>"
+    )
+  ) |>
+  add_markers(
+    data = peak_summary[spike_type == "Minor"],
+    x = ~date,
+    y = ~cases_7day,
+    name = "Minor Spike",
+    marker = list(
+      color = "#E6A23C",
+      size = 9
+    ),
+    hovertemplate = paste0(
+      "Minor Spike<br>",
+      "Date: %{x|%b %d, %Y}<br>",
+      "Cases/day: %{y:,.0f}",
+      "<extra></extra>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "COVID-19 Case Waves in the United States",
+        "<br><sup>Daily new cases (7-day average); ",
+        "major spikes ≥ 150,000 cases/day</sup>"
+      ),
+      x = 0.02
+    ),
+    xaxis = list(
+      title = "Date",
+      tickformat = "%b %Y",
+      dtick = "M6",
+      showgrid = FALSE
+    ),
+    yaxis = list(
+      title = "Daily New Cases (7-day Average)",
+      tickformat = ",.0f",
+      range = c(0, 900000),
+      showgrid = TRUE,
+      gridcolor = "#E8EDF4",
+      zeroline = FALSE
+    ),
+    legend = list(
+      orientation = "h",
+      x = 0,
+      y = -0.2
+    ),
+    margin = list(
+      l = 80,
+      r = 40,
+      b = 100,
+      t = 100
+    ),
+    hovermode = "closest"
+  ) |>
+  config(displaylogo = FALSE)
+
+p
+
+```
+Based on the national 7-day average of daily new COVID-19 cases, I identified **8 distinct spikes**, including **3 major spikes and 5 minor spikes**. Major spikes were defined as peaks reaching at least 150,000 daily cases, while smaller peaks were classified as minor.
+
+The three major spikes occurred in January 2021, September 2021, and January 2022. The largest spike occurred in January 2022, reaching approximately 806,795 daily cases. The remaining five spikes were substantially smaller.
+
+These classifications are based on an exploratory division of the time series into eight epidemic waves rather than a formal peak-detection procedure.
+
+\
+
+## (b) Comparing States with the Highest and Lowest Case Rates
+
+```{r}
+state_rates <- covid[
+  !state %in% c(
+    "American Samoa", "District of Columbia", "Guam",
+    "Northern Mariana Islands", "Puerto Rico", "Virgin Islands"
+  ),
+  .(
+    overall_rate_per_100k = sum(cases_avg_per_100k, na.rm = TRUE)
+  ),
+  by = state
+]
+
+extreme_states <- rbindlist(list(
+  state_rates[
+    which.max(overall_rate_per_100k),
+    .(category = "Highest", state, overall_rate_per_100k)
+  ],
+  state_rates[
+    which.min(overall_rate_per_100k),
+    .(category = "Lowest", state, overall_rate_per_100k)
+  ]
+))
+
+extreme_states
+
+```
+
+```{r}
+state_comparison <- covid[
+  state %in% extreme_states$state
+][order(date)]
+
+tick_dates <- seq(
+  as.Date("2020-07-01"),
+  as.Date("2023-01-01"),
+  by = "6 months"
+)
+
+tick_labels <- paste(
+  month.abb[as.integer(format(tick_dates, "%m"))],
+  format(tick_dates, "%Y")
+)
+
+p <- plot_ly() |>
+  add_lines(
+    data = state_comparison[state == "Rhode Island"],
+    x = ~date,
+    y = ~cases_avg_per_100k,
+    name = "Rhode Island",
+    line = list(
+      color = "#C43D3D",
+      width = 2.5
+    ),
+    hovertemplate = paste0(
+      "Date: %{x|%Y-%m-%d}<br>",
+      "Cases per 100,000: %{y:.2f}",
+      "<extra>Rhode Island</extra>"
+    )
+  ) |>
+  add_lines(
+    data = state_comparison[state == "Maine"],
+    x = ~date,
+    y = ~cases_avg_per_100k,
+    name = "Maine",
+    line = list(
+      color = "#2878A8",
+      width = 2.5
+    ),
+    hovertemplate = paste0(
+      "Date: %{x|%Y-%m-%d}<br>",
+      "Cases per 100,000: %{y:.2f}",
+      "<extra>Maine</extra>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "COVID-19 Case Rates: Rhode Island vs. Maine",
+        "<br><sup>Daily new cases per 100,000 residents ",
+        "(7-day average), 2020–2023</sup>"
+      ),
+      x = 0.02
+    ),
+    xaxis = list(
+      title = "Date",
+      tickmode = "array",
+      tickvals = tick_dates,
+      ticktext = tick_labels,
+      showgrid = FALSE
+    ),
+    yaxis = list(
+      title = "Daily New Cases per 100,000",
+      tickformat = ",.0f",
+      rangemode = "tozero",
+      showgrid = TRUE,
+      gridcolor = "#E8EDF4",
+      zeroline = FALSE
+    ),
+    legend = list(
+      orientation = "h",
+      x = 0,
+      y = -0.2
+    ),
+    margin = list(
+      l = 90,
+      r = 40,
+      b = 100,
+      t = 100
+    ),
+    hovermode = "x unified"
+  ) |>
+  config(displaylogo = FALSE)
+
+p
+
+```
+Among the 50 U.S. states, **Rhode Island had the highest overall case rate (43,295.51 per 100,000 residents)**, while **Maine had the lowest (22,020.17 per 100,000 residents)**. These values were calculated by summing the daily 7-day rolling average case rates over the study period.
+
+The two states exhibited noticeably different trajectories. Rhode Island experienced earlier and substantially sharper increases in cases, particularly during winter 2020–2021 and January 2022. Its largest spike occurred in January 2022, exceeding 500 daily cases per 100,000 residents. In contrast, Maine generally experienced smaller and more gradual increases. For example, on January 17, 2022, Rhode Island recorded approximately 456.73 daily cases per 100,000 residents, compared with 79.50 in Maine.
+
+Following the major wave in early 2022, case rates declined in both states, and their trajectories became more similar, although smaller fluctuations continued.
+
+Overall, the comparison suggests that **Rhode Island's higher overall case rate was largely associated with more pronounced epidemic peaks**, rather than consistently higher daily case rates throughout the entire study period.
+
+\
+
+## (c) First Five States to Experience Substantial COVID-19 Spread
+
+```{r}
+first_five_states <- covid[
+  state %in% state_rates$state &
+    !is.na(cases_avg_per_100k) &
+    cases_avg_per_100k >= 10,
+  .(first_date = min(date)),
+  by = state
+][
+  order(first_date, state)
+][
+  1:5
+]
+
+first_five_states
+
+```
+
+```{r}
+early_trajectories <- covid[
+  state %in% first_five_states$state &
+    date >= as.Date("2020-03-15") &
+    date <= as.Date("2020-04-10")
+]
+
+early_trajectories[
+  , state := factor(state, levels = first_five_states$state)
+]
+
+threshold_points <- merge(
+  early_trajectories,
+  first_five_states,
+  by = "state"
+)[
+  date == first_date
+]
+
+tick_dates <- seq(
+  as.Date("2020-03-15"),
+  as.Date("2020-04-10"),
+  by = "5 days"
+)
+
+tick_labels <- paste(
+  month.abb[as.integer(format(tick_dates, "%m"))],
+  format(tick_dates, "%d")
+)
+
+```
+
+```{r}
+state_colors <- c(
+  "#C43D3D",
+  "#2878A8",
+  "#E6A23C",
+  "#4E937A",
+  "#8E6BBE"
+)
+
+p <- plot_ly(
+  data = early_trajectories,
+  x = ~date,
+  y = ~cases_avg_per_100k,
+  color = ~state,
+  colors = state_colors,
+  type = "scatter",
+  mode = "lines",
+  line = list(width = 2.5),
+  hovertemplate = paste0(
+    "<b>%{fullData.name}</b><br>",
+    "Date: %{x|%Y-%m-%d}<br>",
+    "Cases per 100,000: %{y:.2f}",
+    "<extra></extra>"
+  )
+) |>
+  add_markers(
+    data = threshold_points,
+    x = ~date,
+    y = ~cases_avg_per_100k,
+    color = ~state,
+    colors = state_colors,
+    inherit = FALSE,
+    showlegend = FALSE,
+    marker = list(
+      size = 10,
+      line = list(
+        color = "white",
+        width = 1
+      )
+    ),
+    hovertemplate = paste0(
+      "<b>%{fullData.name}</b><br>",
+      "First threshold date: %{x|%Y-%m-%d}<br>",
+      "Cases per 100,000: %{y:.2f}",
+      "<extra></extra>"
+    )
+  ) |>
+  layout(
+    title = list(
+      text = paste0(
+        "Early COVID-19 Spread: First Five States",
+        "<br><sup>Daily new cases per 100,000 residents ",
+        "(7-day average), March–April 2020</sup>"
+      ),
+      x = 0.02
+    ),
+    xaxis = list(
+      title = "Date",
+      tickmode = "array",
+      tickvals = tick_dates,
+      ticktext = tick_labels,
+      showgrid = FALSE
+    ),
+    yaxis = list(
+      title = "Daily New Cases per 100,000",
+      rangemode = "tozero",
+      showgrid = TRUE,
+      gridcolor = "#E8EDF4",
+      zeroline = FALSE
+    ),
+    shapes = list(
+      list(
+        type = "line",
+        xref = "paper",
+        x0 = 0,
+        x1 = 1,
+        yref = "y",
+        y0 = 10,
+        y1 = 10,
+        line = list(
+          color = "#777777",
+          width = 1.5,
+          dash = "dash"
+        )
+      )
+    ),
+    annotations = list(
+      list(
+        x = 1,
+        y = 10,
+        xref = "paper",
+        yref = "y",
+        text = "Threshold = 10",
+        showarrow = FALSE,
+        xanchor = "right",
+        yanchor = "bottom",
+        font = list(
+          size = 11,
+          color = "#666666"
+        )
+      )
+    ),
+    legend = list(
+      orientation = "h",
+      x = 0,
+      y = -0.25
+    ),
+    margin = list(
+      l = 90,
+      r = 40,
+      b = 110,
+      t = 100
+    ),
+    hovermode = "closest"
+  ) |>
+  config(displaylogo = FALSE)
+
+p
+
+```
+Using a threshold of 10 daily new COVID-19 cases per 100,000 residents (7-day average) to indicate substantial spread, I identified the first five states to reach this level: **New York (March 22, 2020), New Jersey (March 27, 2020), Massachusetts (March 30, 2020), Connecticut (March 31, 2020), and Louisiana (March 31, 2020).**
+
+The plot shows that New York experienced the earliest substantial increase, followed by New Jersey. The remaining three states crossed the threshold near the end of March, with Connecticut and Louisiana reaching it on the same day. New York also exhibited the steepest early increase among these five states.
+
+This threshold provides an exploratory definition of substantial spread rather than a formal statistical test. The results describe the earliest states to reach the selected reported case-rate threshold, not necessarily the states where infections first occurred.
+
 
 
 
